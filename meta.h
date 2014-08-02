@@ -51,6 +51,8 @@ struct gpfs_dir
 
 struct gpfs_node * gpfs_create_file(struct gpfs_data *, const char *);
 struct gpfs_node * gpfs_create_dir(struct gpfs_data *, const char *);
+void               gpfs_node_stat(struct gpfs_data *, struct gpfs_node *,
+                                  struct stat *);
 void               gpfs_free_node(struct gpfs_node *);
 
 
