@@ -28,8 +28,8 @@
  */
 struct gpfs_data
 {
-  /** Linked list of files */
-  struct gpfs_file *files;
+  /** Linked list of nodes */
+  struct gpfs_node *nodes;
 
   /** Last used file UID */
   uint64_t last_uid;

@@ -9,18 +9,38 @@
  * Creates a new file, attaching it to the root list.
  * @param gpfs GPFS data
  */
-struct gpfs_file *
+struct gpfs_node *
 gpfs_create_file(struct gpfs_data *gpfs, const char *path)
 {
-  struct gpfs_file *file;
+  struct gpfs_node *file;
 
   /* Allocate a new node */
-  file = (struct gpfs_file*)malloc(sizeof(struct gpfs_file));
+  file = (struct gpfs_node*)malloc(sizeof(struct gpfs_node));
   file->path = strdup(path);
+  file->type = GPFS_FILE;
 
   /* Add it to the root list */
-  file->next = gpfs->files;
-  gpfs->files = file;
+  file->next = gpfs->nodes;
+  gpfs->nodes = file;
+}
+
+
+/**
+ * Creates a new directory
+ */
+struct gpfs_node *
+gpfs_create_dir(struct gpfs_data *gpfs, const char *path)
+{
+  struct gpfs_node *file;
+
+  /* Allocate a new node */
+  file = (struct gpfs_node*)malloc(sizeof(struct gpfs_node));
+  file->path = strdup(path);
+  file->type = GPFS_DIR;
+
+  /* Add it to the root list */
+  file->next = gpfs->nodes;
+  gpfs->nodes = file;
 }
 
 
@@ -29,7 +49,7 @@ gpfs_create_file(struct gpfs_data *gpfs, const char *path)
  * @param file Pointer to the file metadata
  */
 void
-gpfs_free_file(struct gpfs_file *file)
+gpfs_free_node(struct gpfs_node *file)
 {
   if (file->path)
   {
