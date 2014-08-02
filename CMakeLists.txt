@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(gpfs)
 
-add_definitions(-D_FILE_OFFSET_BITS=64 -DFUSE_USE_VERSION=26)
+add_definitions(-D_FILE_OFFSET_BITS=64)
 set(CMAKE_C_FLAGS "-std=gnu99 -Wall ${CMAKE_C_FLAGS}")
 
 set(SOURCES

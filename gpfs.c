@@ -10,9 +10,21 @@
  */
 static void* gpfs_init(struct fuse_conn_info *conn)
 {
-  struct gpfs *gpfs;
+  struct gpfs_data *gpfs;
 
-  gpfs = (struct gpfs*)malloc(sizeof(struct gpfs_data));
+  /* Initialize the gpfs data */
+  gpfs = (struct gpfs_data*)malloc(sizeof(struct gpfs_data));
+
+  /* Load or create the file list */
+  if (access("~/.gpfs/meta", F_OK))
+  {
+    assert(!"Not implemented");
+  }
+  else
+  {
+    gpfs->last_uid = 0ull;
+    gpfs->root = NULL;
+  }
 
   return gpfs;
 }
@@ -70,13 +82,21 @@ static int gpfs_release(const char *path, struct fuse_file_info *fi)
  * @param stat Stat structure
  * @return     Status
  */
-static int gpfs_getattr(const char *path, struct stat *stat)
+static int gpfs_getattr(const char *path, struct stat *st)
 {
   struct gpfs_data *gpfs;
 
   assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
 
-  return 0;
+  if (!strcmp(path, "/"))
+  {
+    memset(st, 0, sizeof(struct stat));
+    st->st_mode = S_IFDIR | 0755;
+    st->st_nlink = 2;
+    return 0;
+  }
+
+  return -ENOENT;
 }
 
 
@@ -94,6 +114,9 @@ static int gpfs_readdir(const char *path, void *buf, fuse_fill_dir_t fill,
   struct gpfs_data *gpfs;
 
   assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+
+  fill(buf, ".", NULL, 0);
+  fill(buf, "..", NULL, 0);
 
   return 0;
 }

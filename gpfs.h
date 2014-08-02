@@ -8,14 +8,23 @@
 
 /* C includes */
 #include <assert.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 
+/* Linux includes */
+#include <sys/stat.h>
+#include <unistd.h>
 
 /* Libraries */
+#define FUSE_USE_VERSION 26
 #include <fuse.h>
 #include <png.h>
+
+
+/* GPFS includes */
+#include "meta.h"
 
 
 /**
@@ -23,16 +32,11 @@
  */
 struct gpfs_data
 {
+  /** Pointer to the root file */
+  struct gpfs_file *root;
 
-};
-
-
-/**
- * GPFS options
- */
-struct gpfs_options
-{
-
+  /** Last used file UID */
+  uint64_t last_uid;
 };
 
 
