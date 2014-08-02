@@ -99,15 +99,35 @@ static int gpfs_release(const char *path, struct fuse_file_info *fi)
 static int gpfs_getattr(const char *path, struct stat *st)
 {
   struct gpfs_data *gpfs;
+  struct gpfs_node *node;
 
   assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
 
-  if (!strcmp(path, "/"))
+  node = gpfs->nodes;
+  while (node)
   {
-    memset(st, 0, sizeof(struct stat));
-    st->st_mode = S_IFDIR | 0755;
-    st->st_nlink = 2;
-    return 0;
+    if (strcmp(path, node->path))
+    {
+      node = node->next;
+      continue;
+    }
+
+    switch (node->type)
+    {
+      case GPFS_FILE:
+      {
+        st->st_mode = S_IFREG | 0755;
+        st->st_size = 0;
+        st->st_nlink = 1;
+        return 0;
+      }
+      case GPFS_DIR:
+      {
+        st->st_mode = S_IFDIR | 0755;
+        st->st_nlink = 2;
+        return 0;
+      }
+    }
   }
 
   return -ENOENT;
@@ -127,7 +147,7 @@ static int gpfs_readdir(const char *path, void *buf, fuse_fill_dir_t fill,
 {
   struct gpfs_data *gpfs;
   struct gpfs_node *node;
-  size_t path_len;
+  struct gpfs_node *file;
 
   assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
 
