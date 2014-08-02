@@ -31,6 +31,24 @@ struct gpfs_node
 };
 
 
+/**
+ * File entry
+ */
+struct gpfs_file
+{
+  struct gpfs_node nd;
+};
+
+
+/**
+ * Directory entry
+ */
+struct gpfs_dir
+{
+  struct gpfs_node nd;
+};
+
+
 struct gpfs_node * gpfs_create_file(struct gpfs_data *, const char *);
 struct gpfs_node * gpfs_create_dir(struct gpfs_data *, const char *);
 void               gpfs_free_node(struct gpfs_node *);

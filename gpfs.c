@@ -25,6 +25,7 @@ static void* gpfs_init(struct fuse_conn_info *conn)
     gpfs->last_uid = 0ull;
     gpfs->nodes = NULL;
 
+    gpfs_create_dir(gpfs, "/");
     gpfs_create_file(gpfs, "/test");
     gpfs_create_file(gpfs, "/test2");
   }
@@ -125,26 +126,26 @@ static int gpfs_readdir(const char *path, void *buf, fuse_fill_dir_t fill,
                         off_t off, struct fuse_file_info *fi)
 {
   struct gpfs_data *gpfs;
-  struct gpfs_node *file;
-  int exists;
+  struct gpfs_node *node;
   size_t path_len;
 
   assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
 
-  /* Check if any nodes exist */
-  if (!gpfs->nodes)
+  node = gpfs->nodes;
+  while (node)
   {
-    if (!strcmp(path, "/"))
+    if (strcmp(path, node->path))
     {
-      fill(buf, ".", NULL, 0);
-      fill(buf, "..", NULL, 0);
-      return 0;
+      node = node->next;
+      continue;
     }
-    else
-    {
-      return -ENOENT;
-    }
+
+    fill(buf, ".", NULL, 0);
+    fill(buf, "..", NULL, 0);
+    return 0;
   }
+
+  return -ENOENT;
 }
 
 
