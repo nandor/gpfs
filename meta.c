@@ -22,6 +22,8 @@ gpfs_create_file(struct gpfs_data *gpfs, const char *path)
   /* Add it to the root list */
   file->next = gpfs->nodes;
   gpfs->nodes = file;
+
+  return file;
 }
 
 
@@ -41,8 +43,31 @@ gpfs_create_dir(struct gpfs_data *gpfs, const char *path)
   /* Add it to the root list */
   file->next = gpfs->nodes;
   gpfs->nodes = file;
+
+  return file;
 }
 
+void
+gpfs_node_stat(struct gpfs_data *gpfs, struct gpfs_node *node, struct stat *st)
+{
+  memset(st, 0, sizeof(st));
+  switch (node->type)
+  {
+    case GPFS_FILE:
+    {
+      st->st_mode = S_IFREG | 0755;
+      st->st_size = 0;
+      st->st_nlink = 1;
+      break;
+    }
+    case GPFS_DIR:
+    {
+      st->st_mode = S_IFDIR | 0755;
+      st->st_nlink = 2;
+      break;
+    }
+  }
+}
 
 /**
  * Frees memory occupied by a file object

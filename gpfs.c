@@ -28,6 +28,9 @@ static void* gpfs_init(struct fuse_conn_info *conn)
     gpfs_create_dir(gpfs, "/");
     gpfs_create_file(gpfs, "/test");
     gpfs_create_file(gpfs, "/test2");
+
+    gpfs_create_dir(gpfs, "/x");
+    gpfs_create_file(gpfs, "/x/a");
   }
 
   return gpfs;
@@ -112,22 +115,8 @@ static int gpfs_getattr(const char *path, struct stat *st)
       continue;
     }
 
-    switch (node->type)
-    {
-      case GPFS_FILE:
-      {
-        st->st_mode = S_IFREG | 0755;
-        st->st_size = 0;
-        st->st_nlink = 1;
-        return 0;
-      }
-      case GPFS_DIR:
-      {
-        st->st_mode = S_IFDIR | 0755;
-        st->st_nlink = 2;
-        return 0;
-      }
-    }
+    gpfs_node_stat(gpfs, node, st);
+    return 0;
   }
 
   return -ENOENT;
@@ -146,11 +135,13 @@ static int gpfs_readdir(const char *path, void *buf, fuse_fill_dir_t fill,
                         off_t off, struct fuse_file_info *fi)
 {
   struct gpfs_data *gpfs;
-  struct gpfs_node *node;
-  struct gpfs_node *file;
+  struct gpfs_node *node, *file;
+  size_t dir_path_len, file_path_len;
+  struct stat st;
 
   assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
 
+  dir_path_len = strcmp(path, "/") ? strlen(path) : 0;
   node = gpfs->nodes;
   while (node)
   {
@@ -160,8 +151,35 @@ static int gpfs_readdir(const char *path, void *buf, fuse_fill_dir_t fill,
       continue;
     }
 
+    if (node->type != GPFS_DIR)
+    {
+      return -ENOTDIR;
+    }
+
     fill(buf, ".", NULL, 0);
     fill(buf, "..", NULL, 0);
+
+    for (file = gpfs->nodes; file; file = file->next)
+    {
+      file_path_len = strlen(file->path);
+
+      if (!strcmp(file->path, path))
+      {
+        return;
+      }
+
+      if (file_path_len <= dir_path_len ||
+          file->path[dir_path_len] != '/' ||
+          strncmp(file->path, path, dir_path_len) ||
+          strchr(file->path + dir_path_len + 1, '/'))
+      {
+        continue;
+      }
+
+      gpfs_node_stat(gpfs, file, &st);
+      fill(buf, file->path + dir_path_len + 1, &st, 0);
+    }
+
     return 0;
   }
 
