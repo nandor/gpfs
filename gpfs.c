@@ -168,6 +168,39 @@ static int gpfs_readdir(const char *path, void *buf, fuse_fill_dir_t fill,
   return -ENOENT;
 }
 
+/**
+ * Create a GPFS directory
+ * @param path Path to the directory
+ * @param mode Mode of the directory
+ * @return     Status
+ */
+int gpfs_mkdir(const char *path, mode_t mode) {
+  struct gpfs_data *gpfs;
+
+  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+
+  // TODO(tache): add mode
+  gpfs_create_dir(gpfs, path);
+  return 0;
+}
+
+/**
+ * Create non-directory, non-symbolic GPFS file
+ * @param path Path to the file
+ * @param mode Mode of the file
+ * @param dev Type of the file
+ * @return     Status
+ */
+int gpfs_mknod(const char * path, mode_t mode, dev_t type) {
+  struct gpfs_data *gpfs;
+
+  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+
+  // TODO(tache): use mode and type
+  gpfs_create_file(gpfs, path);
+
+  return 0;
+}
 
 /**
  * Fuse function pointer struct
@@ -176,6 +209,8 @@ static struct fuse_operations gpfs_operations =
 {
   .init    = gpfs_init,
   .open    = gpfs_open,
+  .mknod  = gpfs_mknod,
+  .mkdir  = gpfs_mkdir,
   .release = gpfs_release,
   .getattr = gpfs_getattr,
   .readdir = gpfs_readdir,
