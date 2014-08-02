@@ -16,14 +16,17 @@ static void* gpfs_init(struct fuse_conn_info *conn)
   gpfs = (struct gpfs_data*)malloc(sizeof(struct gpfs_data));
 
   /* Load or create the file list */
-  if (access("~/.gpfs/meta", F_OK))
+  if (!access("~/.gpfs/meta", F_OK))
   {
     assert(!"Not implemented");
   }
   else
   {
     gpfs->last_uid = 0ull;
-    gpfs->root = NULL;
+    gpfs->files = NULL;
+
+    gpfs_create_file(gpfs, "/test");
+    gpfs_create_file(gpfs, "/test2");
   }
 
   return gpfs;
@@ -36,12 +39,21 @@ static void* gpfs_init(struct fuse_conn_info *conn)
 static void gpfs_destroy(void *data)
 {
   struct gpfs_data *gpfs;
+  struct gpfs_file *file, *next;
 
   if (!(gpfs = (struct gpfs_data*)data))
   {
     return;
   }
 
+  if (gpfs->files)
+  {
+    for (file = gpfs->files; file; file = next)
+    {
+      next = file->next;
+      gpfs_free_file(file);
+    }
+  }
   free(gpfs);
 }
 

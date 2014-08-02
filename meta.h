@@ -12,11 +12,15 @@
 struct gpfs_file
 {
   /** Full path of the file */
-  const char *name;
+  char *path;
 
   /** Next file in the list */
   struct gpfs_file *next;
 };
+
+
+struct gpfs_file * gpfs_create_file(struct gpfs_data *, const char *);
+void               gpfs_free_file(struct gpfs_file *);
 
 
 #endif /*__GPFS_META_H__*/

@@ -23,21 +23,21 @@
 #include <png.h>
 
 
-/* GPFS includes */
-#include "meta.h"
-
-
 /**
  * GPFS state
  */
 struct gpfs_data
 {
-  /** Pointer to the root file */
-  struct gpfs_file *root;
+  /** Linked list of files */
+  struct gpfs_file *files;
 
   /** Last used file UID */
   uint64_t last_uid;
 };
+
+
+/* GPFS includes */
+#include "meta.h"
 
 
 #endif /*__GPFS_H__*/
