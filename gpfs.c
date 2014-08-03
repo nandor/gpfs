@@ -365,5 +365,12 @@ static struct fuse_operations gpfs_operations =
  */
 int main(int argc, char **argv)
 {
-  return fuse_main(argc, argv, &gpfs_operations, NULL);
+  int ret;
+
+  plus_init();
+  plus_auth();
+  ret = fuse_main(argc, argv, &gpfs_operations, NULL);
+  plus_free();
+
+  return ret;
 }

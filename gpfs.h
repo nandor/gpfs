@@ -21,7 +21,7 @@
 #define FUSE_USE_VERSION 26
 #include <fuse.h>
 #include <png.h>
-#include <oauth.h>
+#include <curl/curl.h>
 
 
 /**

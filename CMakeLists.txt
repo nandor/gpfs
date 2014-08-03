@@ -22,6 +22,7 @@ set(HEADERS
 set(LIBS
   png
   fuse
+  curl
 )
 
 add_executable(gpfs ${SOURCES} ${HEADERS})
