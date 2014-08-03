@@ -14,19 +14,21 @@ gpfs_create_file(struct gpfs_data *gpfs, const char *path, mode_t mode,
     dev_t unused_type)
 {
   struct gpfs_file *file;
-  struct gpfs_node *node;
 
   /* Allocate a new node */
   file = (struct gpfs_file*)malloc(sizeof(struct gpfs_file));
-  node = (struct gpfs_node*)file;
 
-  node->path = strdup(path);
-  node->mode = mode;
-  node->type = GPFS_FILE;
+  file->nd.path = strdup(path);
+  file->nd.mode = mode;
+  file->nd.type = GPFS_FILE;
 
   /* Add it to the root list */
-  node->next = gpfs->nodes;
-  gpfs->nodes = node;
+  file->nd.next = gpfs->nodes;
+  gpfs->nodes = &file->nd;
+
+  /* Clear storage */
+  file->data = NULL;
+  file->size = 0ull;
 
   return file;
 }
@@ -39,40 +41,75 @@ struct gpfs_dir *
 gpfs_create_dir(struct gpfs_data *gpfs, const char *path, mode_t mode)
 {
   struct gpfs_dir *dir;
-  struct gpfs_node *node;
 
   /* Allocate a new node */
   dir = (struct gpfs_dir*)malloc(sizeof(struct gpfs_dir));
-  node = (struct gpfs_node*)dir;
-  node->path = strdup(path);
-  node->mode = mode;
-  node->type = GPFS_DIR;
+
+  dir->nd.path = strdup(path);
+  dir->nd.mode = mode;
+  dir->nd.type = GPFS_DIR;
 
   /* Add it to the root list */
-  node->next = gpfs->nodes;
-  gpfs->nodes = node;
+  dir->nd.next = gpfs->nodes;
+  gpfs->nodes = &dir->nd;
 
   return dir;
 }
 
 
+/**
+ * Retrieves file metadata
+ * @param gpfs GPFS file system metadata
+ * @param path Full path to the file
+ * @return Pointer to the metadata or NULL
+ */
+struct gpfs_file *
+gpfs_get_file(struct gpfs_data *gpfs, const char *path)
+{
+  struct gpfs_node *node;
+
+  if (!gpfs->nodes)
+  {
+    return NULL;
+  }
+
+  for (node = gpfs->nodes; node; node = node->next)
+  {
+    if (node->type == GPFS_FILE && !strcmp(node->path, path))
+    {
+      return (struct gpfs_file*)node;
+    }
+  }
+
+  return NULL;
+}
+
+
+/**
+ * Reads the permissions and owners of a file
+ */
 void
 gpfs_node_stat(struct gpfs_data *gpfs, struct gpfs_node *node, struct stat *st)
 {
-  struct gpfs_node *iter = gpfs->nodes;
+  struct gpfs_file *file;
+  struct gpfs_dir *dir;
 
-  memset(st, 0, sizeof(st));
+  memset(st, 0, sizeof(struct stat));
   switch (node->type)
   {
     case GPFS_FILE:
     {
+      file = (struct gpfs_file*)node;
+
       st->st_mode = S_IFREG | 0755;
-      st->st_size = 0;
+      st->st_size = file->size;
       st->st_nlink = 1;
       break;
     }
     case GPFS_DIR:
     {
+      dir = (struct gpfs_dir*)node;
+
       st->st_mode = S_IFDIR | 0755;
       st->st_nlink = 2;
       break;
