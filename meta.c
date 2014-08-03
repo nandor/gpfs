@@ -64,25 +64,57 @@ gpfs_create_dir(struct gpfs_data *gpfs, const char *path, mode_t mode)
  * @return Pointer to the metadata or NULL
  */
 struct gpfs_file *
-gpfs_get_file(struct gpfs_data *gpfs, const char *path)
-{
-  struct gpfs_node *node;
+gpfs_get_file(struct gpfs_data *gpfs, const char *path) {
+  struct gpfs_node *node = gpfs_get_node(gpfs, path);
 
-  if (!gpfs->nodes)
-  {
+  if (node==NULL || node->type != GPFS_FILE) {
     return NULL;
   }
 
-  for (node = gpfs->nodes; node; node = node->next)
-  {
-    if (node->type == GPFS_FILE && !strcmp(node->path, path))
-    {
-      return (struct gpfs_file*)node;
+  return (struct gpfs_file*) node;
+}
+
+/**
+ * Retrieves dir metadata
+ * @param gpfs GPFS file system metadata
+ * @param path Full path to the dir
+ * @return Pointer to the metadata or NULL
+ */
+struct gpfs_dir *
+gpfs_get_dir(struct gpfs_data *gpfs, const char *path) {
+  struct gpfs_node *node = gpfs_get_node(gpfs, path);
+
+  if (node==NULL || node->type != GPFS_DIR) {
+    return NULL;
+  }
+
+  return (struct gpfs_dir*)node;
+}
+
+/**
+ * Retrieves node metadata
+ * @param gpfs GPFS file system metadata
+ * @param path Full path to the node
+ * @return Pointer to the metadata or NULL
+ */
+struct gpfs_node *
+gpfs_get_node(struct gpfs_data *gpfs, const char *path) {
+  struct gpfs_node *node;
+
+  if (!gpfs->nodes){
+    return NULL;
+  }
+
+  for (node = gpfs->nodes; node; node = node->next) {
+    if (!strcmp(node->path, path)) {
+      return node;
     }
   }
 
   return NULL;
 }
+
+
 
 
 /**
