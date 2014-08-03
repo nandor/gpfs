@@ -92,6 +92,42 @@ static int gpfs_flush(const char *path, struct fuse_file_info *fi)
 
 
 /**
+ * @param path Path to the file
+ */
+static int gpfs_chmod(const char *path, mode_t mode) {
+  return 0;
+}
+
+
+/**
+ *
+ */
+static int gpfs_chown(const char *path, uid_t uid, gid_t gid) {
+  return 0;
+}
+
+
+/**
+ * Changes the size of a file
+ * @param path Path to the file
+ * @param off  File offset
+ */
+static int gpfs_truncate(const char *path, off_t off) {
+  struct gpfs_data *gpfs;
+  struct gpfs_file *file;
+
+  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  if (!(file = gpfs_get_file(gpfs, path))) {
+    return -ENOENT;
+  }
+
+  file->size = off;
+  file->data = realloc(file->data, off);
+  return 0;
+}
+
+
+/**
  * Reads from a GPFS file
  */
 static int gpfs_read(const char *path, char *buf, size_t len,
@@ -251,6 +287,7 @@ static int gpfs_readdir(const char *path, void *buf, fuse_fill_dir_t fill,
   return -ENOENT;
 }
 
+
 /**
  * Create a GPFS directory
  * @param path Path to the directory
@@ -265,6 +302,7 @@ int gpfs_mkdir(const char *path, mode_t mode) {
   gpfs_create_dir(gpfs, path, mode);
   return 0;
 }
+
 
 /**
  * Create non-directory, non-symbolic GPFS file
@@ -289,17 +327,21 @@ int gpfs_mknod(const char * path, mode_t mode, dev_t type) {
  */
 static struct fuse_operations gpfs_operations =
 {
-  .mknod   = gpfs_mknod,
-  .mkdir   = gpfs_mkdir,
-  .open    = gpfs_open,
-  .read    = gpfs_read,
-  .write   = gpfs_write,
-  .flush   = gpfs_flush,
-  .readdir = gpfs_readdir,
-  .release = gpfs_release,
-  .getattr = gpfs_getattr,
-  .init    = gpfs_init,
-  .destroy = gpfs_destroy,
+  .mknod    = gpfs_mknod,
+  .mkdir    = gpfs_mkdir,
+  .flush    = gpfs_flush,
+  .chmod    = gpfs_chmod,
+  .chown    = gpfs_chown,
+  .truncate = gpfs_truncate,
+  .open     = gpfs_open,
+  .read     = gpfs_read,
+  .write    = gpfs_write,
+  .flush    = gpfs_flush,
+  .readdir  = gpfs_readdir,
+  .release  = gpfs_release,
+  .getattr  = gpfs_getattr,
+  .init     = gpfs_init,
+  .destroy  = gpfs_destroy,
 };
 
 
