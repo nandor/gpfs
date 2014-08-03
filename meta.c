@@ -20,6 +20,7 @@ gpfs_create_file(struct gpfs_data *gpfs, const char *path) {
   file->nd.path = strdup(path);
   file->nd.type = GPFS_FILE;
   file->nd.stat.st_dev = S_IFREG;
+  file->nd.stat.st_size = 0ull;
 
   /* Add it to the root list */
   file->nd.next = gpfs->nodes;
@@ -28,7 +29,6 @@ gpfs_create_file(struct gpfs_data *gpfs, const char *path) {
 
   /* Clear storage */
   file->data = NULL;
-  file->size = 0ull;
 
   return file;
 }

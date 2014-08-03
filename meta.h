@@ -42,9 +42,6 @@ struct gpfs_file
 
   /** Storage */
   uint8_t *data;
-
-  /** Length of file */
-  uint64_t size;
 };
 
 

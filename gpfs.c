@@ -64,7 +64,7 @@ static int gpfs_flush(const char *path, struct fuse_file_info *fi)
  * @param path Path to the file
  */
 static int gpfs_chmod(const char *path, mode_t mode) {
-  struct gpds_data *gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
+  struct gpfs_data *gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
   assert(gpfs);
 
   struct gpfs_node * node = gpfs_get_node(gpfs, path);
@@ -81,7 +81,7 @@ static int gpfs_chmod(const char *path, mode_t mode) {
  *
  */
 static int gpfs_chown(const char *path, uid_t uid, gid_t gid) {
-  struct gpds_data *gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
+  struct gpfs_data *gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
   assert(gpfs);
 
   struct gpfs_node * node = gpfs_get_node(gpfs, path);
@@ -111,7 +111,7 @@ static int gpfs_truncate(const char *path, off_t off) {
     return -ENOENT;
   }
 
-  file->size = off;
+  file->nd.stat.st_size = off;
   file->data = realloc(file->data, off);
   return 0;
 }
@@ -135,13 +135,13 @@ static int gpfs_read(const char *path, char *buf, size_t len,
     return -ENOENT;
   }
 
-  if (off > file->size)
+  if (off > file->nd.stat.st_size)
   {
     return 0;
   }
 
-  size = (off + len > file->size) ? (file->size - off) : len;
-  memcpy(buf, file->data + off, size);
+  size = (off + len > file->nd.stat.st_size) ? (file->nd.stat.st_size - off) : len;
+  memcpy(buf, file->data + off, file->nd.stat.st_size);
   return size;
 }
 
@@ -163,10 +163,10 @@ static int gpfs_write(const char *path, const char *buf, size_t len,
     return -ENOENT;
   }
 
-  if (len + off > file->size)
+  if (len + off > file->nd.stat.st_size)
   {
     file->data = (uint8_t*)realloc(file->data, len + off);
-    file->size = len + off;
+    file->nd.stat.st_size = len + off;
   }
 
   memcpy(file->data + off, buf, len);
