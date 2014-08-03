@@ -11,7 +11,9 @@
  */
 static const char REQUEST_URL[] =
   "https://accounts.google.com/o/oauth2/auth"
-    "?scope=https://www.googleapis.com/auth/plus.media.upload"
+    "?scope="
+      "https://www.googleapis.com/auth/plus.media.upload%20"
+      "https://www.googleapis.com/auth/plus.me"
     "&redirect_uri=urn:ietf:wg:oauth:2.0:oob"
     "&response_type=code"
     "&client_id="

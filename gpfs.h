@@ -38,6 +38,7 @@ struct gpfs_data
 
 
 /* GPFS includes */
+#include "util.h"
 #include "plus.h"
 #include "meta.h"
 

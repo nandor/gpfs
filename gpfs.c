@@ -11,17 +11,19 @@
 static void* gpfs_init(struct fuse_conn_info *conn)
 {
   struct gpfs_data *gpfs;
+  char *meta_path;
+  FILE *meta_file;
 
   /* Initialize the gpfs data */
-  gpfs = (struct gpfs_data*)malloc(sizeof(struct gpfs_data));
-
-  /* Load or create the file list */
-  if (!access("~/.gpfs/meta", F_OK))
-  {
-    assert(!"Not implemented");
+  if (!(gpfs = (struct gpfs_data*)malloc(sizeof(struct gpfs_data)))) {
+    return NULL;
   }
-  else
-  {
+
+  /* Create the metadata file */
+  meta_path = homepath(".gpfs/meta");
+  if (!access(meta_path, F_OK)) {
+    assert(!"Not implemented");
+  } else {
     gpfs->last_uid = 0ull;
     gpfs->nodes = NULL;
 
@@ -363,9 +365,19 @@ static struct fuse_operations gpfs_operations =
  * @param argv Argument values
  * @return 0 on success or error code
  */
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
   int ret;
+  char *gpfs_dir;
+
+  /* Create the metadata directory */
+  gpfs_dir = homepath(".gpfs");
+  if (access(gpfs_dir, F_OK) && mkdir(gpfs_dir, 0700)) {
+    fputs("Cannot create ~/.gpfs", stderr);
+    if (gpfs_dir) {
+      free(gpfs_dir);
+    }
+    return EXIT_FAILURE;
+  }
 
   plus_init();
   plus_auth();

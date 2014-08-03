@@ -11,12 +11,14 @@ set(SOURCES
   gpfs.c
   meta.c
   plus.c
+  util.c
 )
 
 set(HEADERS
   gpfs.h
   meta.h
   plus.h
+  util.h
 )
 
 set(LIBS
