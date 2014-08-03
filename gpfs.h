@@ -21,6 +21,7 @@
 #define FUSE_USE_VERSION 26
 #include <fuse.h>
 #include <png.h>
+#include <oauth.h>
 
 
 /**
@@ -37,6 +38,7 @@ struct gpfs_data
 
 
 /* GPFS includes */
+#include "plus.h"
 #include "meta.h"
 
 

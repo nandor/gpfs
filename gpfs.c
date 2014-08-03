@@ -73,7 +73,8 @@ static int gpfs_open(const char *path, struct fuse_file_info *fi)
 {
   struct gpfs_data *gpfs;
 
-  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
+  assert(gpfs);
 
   return 0;
 }
@@ -116,7 +117,9 @@ static int gpfs_truncate(const char *path, off_t off) {
   struct gpfs_data *gpfs;
   struct gpfs_file *file;
 
-  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
+  assert(gpfs);
+
   if (!(file = gpfs_get_file(gpfs, path))) {
     return -ENOENT;
   }
@@ -137,7 +140,9 @@ static int gpfs_read(const char *path, char *buf, size_t len,
   struct gpfs_file *file;
   size_t size;
 
-  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
+  assert(gpfs);
+
   if (!(file = gpfs_get_file(gpfs, path)))
   {
     return -ENOENT;
@@ -163,7 +168,9 @@ static int gpfs_write(const char *path, const char *buf, size_t len,
   struct gpfs_data *gpfs;
   struct gpfs_file *file;
 
-  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
+  assert(gpfs);
+
   if (!(file = gpfs_get_file(gpfs, path)))
   {
     return -ENOENT;
@@ -188,7 +195,8 @@ static int gpfs_release(const char *path, struct fuse_file_info *fi)
 {
   struct gpfs_data *gpfs;
 
-  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
+  assert(gpfs);
 
   return 0;
 }
@@ -205,7 +213,8 @@ static int gpfs_getattr(const char *path, struct stat *st)
   struct gpfs_data *gpfs;
   struct gpfs_node *node;
 
-  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
+  assert(gpfs);
 
   node = gpfs->nodes;
   while (node)
@@ -240,7 +249,8 @@ static int gpfs_readdir(const char *path, void *buf, fuse_fill_dir_t fill,
   size_t dir_path_len, file_path_len;
   struct stat st;
 
-  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
+  assert(gpfs);
 
   dir_path_len = strcmp(path, "/") ? strlen(path) : 0;
   node = gpfs->nodes;
@@ -297,7 +307,8 @@ static int gpfs_readdir(const char *path, void *buf, fuse_fill_dir_t fill,
 int gpfs_mkdir(const char *path, mode_t mode) {
   struct gpfs_data *gpfs;
 
-  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
+  assert(gpfs);
 
   gpfs_create_dir(gpfs, path, mode);
   return 0;
@@ -314,7 +325,8 @@ int gpfs_mkdir(const char *path, mode_t mode) {
 int gpfs_mknod(const char * path, mode_t mode, dev_t type) {
   struct gpfs_data *gpfs;
 
-  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
+  assert(gpfs);
 
   gpfs_create_file(gpfs, path, mode, type);
 

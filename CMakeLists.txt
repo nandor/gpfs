@@ -10,11 +10,13 @@ set(CMAKE_C_FLAGS "-std=gnu99 -Wall ${CMAKE_C_FLAGS}")
 set(SOURCES
   gpfs.c
   meta.c
+  plus.c
 )
 
 set(HEADERS
   gpfs.h
   meta.h
+  plus.h
 )
 
 set(LIBS
