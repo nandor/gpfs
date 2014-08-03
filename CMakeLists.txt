@@ -10,16 +10,21 @@ set(CMAKE_C_FLAGS "-std=gnu99 -Wall ${CMAKE_C_FLAGS}")
 set(SOURCES
   gpfs.c
   meta.c
+  plus.c
+  util.c
 )
 
 set(HEADERS
   gpfs.h
   meta.h
+  plus.h
+  util.h
 )
 
 set(LIBS
   png
   fuse
+  curl
 )
 
 add_executable(gpfs ${SOURCES} ${HEADERS})
