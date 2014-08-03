@@ -64,6 +64,15 @@ static int gpfs_flush(const char *path, struct fuse_file_info *fi)
  * @param path Path to the file
  */
 static int gpfs_chmod(const char *path, mode_t mode) {
+  struct gpds_data *gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
+  assert(gpfs);
+
+  struct gpfs_node * node = gpfs_get_node(gpfs, path);
+  if (!node) {
+    return ENOENT;
+  }
+
+  node->stat.st_mode = node->stat.st_dev | mode;
   return 0;
 }
 
@@ -72,6 +81,16 @@ static int gpfs_chmod(const char *path, mode_t mode) {
  *
  */
 static int gpfs_chown(const char *path, uid_t uid, gid_t gid) {
+  struct gpds_data *gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
+  assert(gpfs);
+
+  struct gpfs_node * node = gpfs_get_node(gpfs, path);
+  if (!node) {
+    return ENOENT;
+  }
+
+  node->stat.st_uid = uid;
+  node->stat.st_gid = gid;
   return 0;
 }
 
@@ -390,7 +409,7 @@ int main(int argc, char **argv) {
   }
 
   plus_init();
-  plus_auth();
+ // plus_auth();
   ret = fuse_main(argc, argv, &gpfs_operations, NULL);
   plus_free();
 
