@@ -5,36 +5,6 @@
 #include "gpfs.h"
 
 
-/**
- * Initialises the GPFS filesystem
- */
-static void* gpfs_init(struct fuse_conn_info *conn)
-{
-  struct gpfs_data *gpfs;
-
-  /* Initialize the gpfs data */
-  gpfs = (struct gpfs_data*)malloc(sizeof(struct gpfs_data));
-
-  /* Load or create the file list */
-  if (!access("~/.gpfs/meta", F_OK))
-  {
-    assert(!"Not implemented");
-  }
-  else
-  {
-    gpfs->last_uid = 0ull;
-    gpfs->nodes = NULL;
-
-    gpfs_create_dir(gpfs, "/", 0755);
-    gpfs_create_file(gpfs, "/test", 0755, 0);
-    gpfs_create_file(gpfs, "/test2", 0755, 0);
-
-    gpfs_create_dir(gpfs, "/x", 0755);
-    gpfs_create_file(gpfs, "/x/a", 0755, 0);
-  }
-
-  return gpfs;
-}
 
 
 /**
@@ -288,18 +258,25 @@ static int gpfs_readdir(const char *path, void *buf, fuse_fill_dir_t fill,
 }
 
 
+static void gpfs_init_stat(struct stat *stat, mode_t mode) {
+  struct fuse_context *context = fuse_get_context();
+  stat->st_mode = stat->st_dev | mode;
+  stat->st_uid = context->uid;
+  stat->st_gid = context->gid;
+}
 /**
  * Create a GPFS directory
  * @param path Path to the directory
  * @param mode Mode of the directory
  * @return     Status
  */
-int gpfs_mkdir(const char *path, mode_t mode) {
+static int gpfs_mkdir(const char *path, mode_t mode) {
   struct gpfs_data *gpfs;
 
-  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
 
-  gpfs_create_dir(gpfs, path, mode);
+  struct gpfs_dir *dir = gpfs_create_dir(gpfs, path);
+  gpfs_init_stat(&dir->nd.stat, mode);
   return 0;
 }
 
@@ -311,16 +288,52 @@ int gpfs_mkdir(const char *path, mode_t mode) {
  * @param dev Type of the file
  * @return     Status
  */
-int gpfs_mknod(const char * path, mode_t mode, dev_t type) {
+static int gpfs_mknod(const char * path, mode_t mode, dev_t type) {
   struct gpfs_data *gpfs;
 
-  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
 
-  gpfs_create_file(gpfs, path, mode, type);
+  struct gpfs_file *file = gpfs_create_file(gpfs, path);
+  gpfs_init_stat(&file->nd.stat, mode);
 
   return 0;
 }
 
+/**
+ * Initialises the GPFS filesystem
+ */
+static void* gpfs_init(struct fuse_conn_info *conn)
+{
+  struct gpfs_data *gpfs;
+
+  /* Initialize the gpfs data */
+  gpfs = (struct gpfs_data*)malloc(sizeof(struct gpfs_data));
+
+  /* Load or create the file list */
+  if (!access("~/.gpfs/meta", F_OK))
+  {
+    assert(!"Not implemented");
+  }
+  else
+  {
+    gpfs->last_uid = 0ull;
+    gpfs->nodes = NULL;
+
+    // HACK HACK HACK;
+    struct fuse_context *context = fuse_get_context();
+    context->uid = 1000;
+    context->gid = 1000;
+
+    gpfs_init_stat(&gpfs_create_dir(gpfs, "/")->nd.stat, 0755);
+    gpfs_init_stat(&gpfs_create_file(gpfs, "/test")->nd.stat, 0755);
+    gpfs_init_stat(&gpfs_create_file(gpfs, "/test2")->nd.stat, 0755);
+
+    gpfs_init_stat(&gpfs_create_dir(gpfs, "/x")->nd.stat,  0755);
+    gpfs_init_stat(&gpfs_create_file(gpfs, "/x/a")->nd.stat, 0755);
+  }
+
+  return gpfs;
+}
 
 /**
  * Fuse function pointer struct
@@ -329,7 +342,6 @@ static struct fuse_operations gpfs_operations =
 {
   .mknod    = gpfs_mknod,
   .mkdir    = gpfs_mkdir,
-  .flush    = gpfs_flush,
   .chmod    = gpfs_chmod,
   .chown    = gpfs_chown,
   .truncate = gpfs_truncate,

@@ -10,19 +10,20 @@
  * @param gpfs GPFS data
  */
 struct gpfs_file *
-gpfs_create_file(struct gpfs_data *gpfs, const char *path, mode_t mode,
-                 dev_t unused_type) {
+gpfs_create_file(struct gpfs_data *gpfs, const char *path) {
   struct gpfs_file *file;
 
   /* Allocate a new node */
   file = (struct gpfs_file*)malloc(sizeof(struct gpfs_file));
+  memset(file, 0, sizeof(struct gpfs_file));
 
   file->nd.path = strdup(path);
-  file->nd.mode = mode;
   file->nd.type = GPFS_FILE;
+  file->nd.stat.st_dev = S_IFREG;
 
   /* Add it to the root list */
   file->nd.next = gpfs->nodes;
+
   gpfs->nodes = &file->nd;
 
   /* Clear storage */
@@ -37,15 +38,16 @@ gpfs_create_file(struct gpfs_data *gpfs, const char *path, mode_t mode,
  * Creates a new directory
  */
 struct gpfs_dir *
-gpfs_create_dir(struct gpfs_data *gpfs, const char *path, mode_t mode) {
+gpfs_create_dir(struct gpfs_data *gpfs, const char *path) {
   struct gpfs_dir *dir;
 
   /* Allocate a new node */
   dir = (struct gpfs_dir*)malloc(sizeof(struct gpfs_dir));
+  memset(dir, 0, sizeof(struct gpfs_dir));
 
   dir->nd.path = strdup(path);
-  dir->nd.mode = mode;
   dir->nd.type = GPFS_DIR;
+  dir->nd.stat.st_dev = S_IFDIR;
 
   /* Add it to the root list */
   dir->nd.next = gpfs->nodes;
@@ -121,22 +123,7 @@ gpfs_get_node(struct gpfs_data *gpfs, const char *path) {
 void
 gpfs_node_stat(struct gpfs_data *gpfs, struct gpfs_node *node,
                struct stat *st) {
-  memset(st, 0, sizeof(struct stat));
-  switch (node->type) {
-    case GPFS_FILE: {
-      struct gpfs_file *file = (struct gpfs_file*)node;
-
-      st->st_mode = S_IFREG | node->mode;
-      st->st_size = file->size;
-      st->st_nlink = 1;
-      break;
-    }
-    case GPFS_DIR: {
-      st->st_mode = S_IFDIR | node->mode;
-      st->st_nlink = 2;
-      break;
-    }
-  }
+  memcpy(st, &node->stat, sizeof(struct stat));
 }
 
 /**
