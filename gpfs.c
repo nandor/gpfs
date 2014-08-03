@@ -282,10 +282,7 @@ static int gpfs_mkdir(const char *path, mode_t mode) {
   struct gpfs_data *gpfs;
 
   gpfs = (struct gpfs_data*)fuse_get_context()->private_data;
-<<<<<<< HEAD
-=======
   assert(gpfs);
->>>>>>> c61a2ddd1c52b791b217c733bfce7f68b02a542b
 
   struct gpfs_dir *dir = gpfs_create_dir(gpfs, path);
   gpfs_init_stat(&dir->nd.stat, mode);
