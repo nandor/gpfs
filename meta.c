@@ -123,26 +123,21 @@ gpfs_get_node(struct gpfs_data *gpfs, const char *path) {
 void
 gpfs_node_stat(struct gpfs_data *gpfs, struct gpfs_node *node, struct stat *st)
 {
-  struct gpfs_file *file;
-  struct gpfs_dir *dir;
-
   memset(st, 0, sizeof(struct stat));
   switch (node->type)
   {
     case GPFS_FILE:
     {
-      file = (struct gpfs_file*)node;
+      struct gpfs_file *file = (struct gpfs_file*)node;
 
-      st->st_mode = S_IFREG | 0755;
+      st->st_mode = S_IFREG | node->mode;
       st->st_size = file->size;
       st->st_nlink = 1;
       break;
     }
     case GPFS_DIR:
     {
-      dir = (struct gpfs_dir*)node;
-
-      st->st_mode = S_IFDIR | 0755;
+      st->st_mode = S_IFDIR | node->mode;
       st->st_nlink = 2;
       break;
     }
