@@ -80,6 +80,71 @@ static int gpfs_open(const char *path, struct fuse_file_info *fi)
 
 
 /**
+ * Flushes a GPFS file
+ * @param path  Path to the file
+ * @param fi    FUSE file info
+ * @return      Status
+ */
+static int gpfs_flush(const char *path, struct fuse_file_info *fi)
+{
+  return 0;
+}
+
+
+/**
+ * Reads from a GPFS file
+ */
+static int gpfs_read(const char *path, char *buf, size_t len,
+                     off_t off, struct fuse_file_info *fi)
+{
+  struct gpfs_data *gpfs;
+  struct gpfs_file *file;
+  size_t size;
+
+  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  if (!(file = gpfs_get_file(gpfs, path)))
+  {
+    return -ENOENT;
+  }
+
+  if (off > file->size)
+  {
+    return 0;
+  }
+
+  size = (off + len > file->size) ? (file->size - off) : len;
+  memcpy(buf, file->data + off, size);
+  return size;
+}
+
+
+/**
+ * Writes to a GPFS file
+ */
+static int gpfs_write(const char *path, const char *buf, size_t len,
+                      off_t off, struct fuse_file_info *fi)
+{
+  struct gpfs_data *gpfs;
+  struct gpfs_file *file;
+
+  assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
+  if (!(file = gpfs_get_file(gpfs, path)))
+  {
+    return -ENOENT;
+  }
+
+  if (len + off > file->size)
+  {
+    file->data = (uint8_t*)realloc(file->data, len + off);
+    file->size = len + off;
+  }
+
+  memcpy(file->data + off, buf, len);
+  return len;
+}
+
+
+/**
  * Closes a GPFS file
  * @param
  */
@@ -165,7 +230,7 @@ static int gpfs_readdir(const char *path, void *buf, fuse_fill_dir_t fill,
 
       if (!strcmp(file->path, path))
       {
-        return;
+        continue;
       }
 
       if (file_path_len <= dir_path_len ||
@@ -220,18 +285,22 @@ int gpfs_mknod(const char * path, mode_t mode, dev_t type) {
   return 0;
 }
 
+
 /**
  * Fuse function pointer struct
  */
 static struct fuse_operations gpfs_operations =
 {
-  .init    = gpfs_init,
+  .mknod   = gpfs_mknod,
+  .mkdir   = gpfs_mkdir,
   .open    = gpfs_open,
-  .mknod  = gpfs_mknod,
-  .mkdir  = gpfs_mkdir,
+  .read    = gpfs_read,
+  .write   = gpfs_write,
+  .flush   = gpfs_flush,
+  .readdir = gpfs_readdir,
   .release = gpfs_release,
   .getattr = gpfs_getattr,
-  .readdir = gpfs_readdir,
+  .init    = gpfs_init,
   .destroy = gpfs_destroy,
 };
 

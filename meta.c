@@ -12,18 +12,22 @@
 struct gpfs_node *
 gpfs_create_file(struct gpfs_data *gpfs, const char *path)
 {
-  struct gpfs_node *file;
+  struct gpfs_file *file;
 
   /* Allocate a new node */
-  file = (struct gpfs_node*)malloc(sizeof(struct gpfs_node));
-  file->path = strdup(path);
-  file->type = GPFS_FILE;
+  file = (struct gpfs_file*)malloc(sizeof(struct gpfs_file));
+  file->nd.path = strdup(path);
+  file->nd.type = GPFS_FILE;
 
   /* Add it to the root list */
-  file->next = gpfs->nodes;
-  gpfs->nodes = file;
+  file->nd.next = gpfs->nodes;
+  gpfs->nodes = &file->nd;
 
-  return file;
+  /* Clear storage */
+  file->data = NULL;
+  file->size = 0ull;
+
+  return &file->nd;
 }
 
 
@@ -47,21 +51,60 @@ gpfs_create_dir(struct gpfs_data *gpfs, const char *path)
   return file;
 }
 
+
+/**
+ * Retrieves file metadata
+ * @param gpfs GPFS file system metadata
+ * @param path Full path to the file
+ * @return Pointer to the metadata or NULL
+ */
+struct gpfs_file *
+gpfs_get_file(struct gpfs_data *gpfs, const char *path)
+{
+  struct gpfs_node *node;
+
+  if (!gpfs->nodes)
+  {
+    return NULL;
+  }
+
+  for (node = gpfs->nodes; node; node = node->next)
+  {
+    if (node->type == GPFS_FILE && !strcmp(node->path, path))
+    {
+      return (struct gpfs_file*)node;
+    }
+  }
+
+  return NULL;
+}
+
+
+/**
+ * Reads the permissions and owners of a file
+ */
 void
 gpfs_node_stat(struct gpfs_data *gpfs, struct gpfs_node *node, struct stat *st)
 {
-  memset(st, 0, sizeof(st));
+  struct gpfs_file *file;
+  struct gpfs_dir *dir;
+
+  memset(st, 0, sizeof(struct stat));
   switch (node->type)
   {
     case GPFS_FILE:
     {
+      file = (struct gpfs_file*)node;
+
       st->st_mode = S_IFREG | 0755;
-      st->st_size = 0;
+      st->st_size = file->size;
       st->st_nlink = 1;
       break;
     }
     case GPFS_DIR:
     {
+      dir = (struct gpfs_dir*)node;
+
       st->st_mode = S_IFDIR | 0755;
       st->st_nlink = 2;
       break;
