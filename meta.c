@@ -9,19 +9,24 @@
  * Creates a new file, attaching it to the root list.
  * @param gpfs GPFS data
  */
-struct gpfs_node *
-gpfs_create_file(struct gpfs_data *gpfs, const char *path)
+struct gpfs_file *
+gpfs_create_file(struct gpfs_data *gpfs, const char *path, mode_t mode,
+    dev_t unused_type)
 {
-  struct gpfs_node *file;
+  struct gpfs_file *file;
+  struct gpfs_node *node;
 
   /* Allocate a new node */
-  file = (struct gpfs_node*)malloc(sizeof(struct gpfs_node));
-  file->path = strdup(path);
-  file->type = GPFS_FILE;
+  file = (struct gpfs_file*)malloc(sizeof(struct gpfs_file));
+  node = (struct gpfs_node*)file;
+
+  node->path = strdup(path);
+  node->mode = mode;
+  node->type = GPFS_FILE;
 
   /* Add it to the root list */
-  file->next = gpfs->nodes;
-  gpfs->nodes = file;
+  node->next = gpfs->nodes;
+  gpfs->nodes = node;
 
   return file;
 }
@@ -30,26 +35,32 @@ gpfs_create_file(struct gpfs_data *gpfs, const char *path)
 /**
  * Creates a new directory
  */
-struct gpfs_node *
-gpfs_create_dir(struct gpfs_data *gpfs, const char *path)
+struct gpfs_dir *
+gpfs_create_dir(struct gpfs_data *gpfs, const char *path, mode_t mode)
 {
-  struct gpfs_node *file;
+  struct gpfs_dir *dir;
+  struct gpfs_node *node;
 
   /* Allocate a new node */
-  file = (struct gpfs_node*)malloc(sizeof(struct gpfs_node));
-  file->path = strdup(path);
-  file->type = GPFS_DIR;
+  dir = (struct gpfs_dir*)malloc(sizeof(struct gpfs_dir));
+  node = (struct gpfs_node*)dir;
+  node->path = strdup(path);
+  node->mode = mode;
+  node->type = GPFS_DIR;
 
   /* Add it to the root list */
-  file->next = gpfs->nodes;
-  gpfs->nodes = file;
+  node->next = gpfs->nodes;
+  gpfs->nodes = node;
 
-  return file;
+  return dir;
 }
+
 
 void
 gpfs_node_stat(struct gpfs_data *gpfs, struct gpfs_node *node, struct stat *st)
 {
+  struct gpfs_node *iter = gpfs->nodes;
+
   memset(st, 0, sizeof(st));
   switch (node->type)
   {

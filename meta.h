@@ -23,6 +23,9 @@ struct gpfs_node
   /** Full path of the node */
   char *path;
 
+  /** Mode of the node */
+  mode_t mode;
+
   /** Type of the node */
   enum gpfs_node_type type;
 
@@ -49,8 +52,9 @@ struct gpfs_dir
 };
 
 
-struct gpfs_node * gpfs_create_file(struct gpfs_data *, const char *);
-struct gpfs_node * gpfs_create_dir(struct gpfs_data *, const char *);
+struct gpfs_file * gpfs_create_file(struct gpfs_data *, const char *, mode_t,
+    dev_t);
+struct gpfs_dir * gpfs_create_dir(struct gpfs_data *, const char *, mode_t);
 void               gpfs_node_stat(struct gpfs_data *, struct gpfs_node *,
                                   struct stat *);
 void               gpfs_free_node(struct gpfs_node *);

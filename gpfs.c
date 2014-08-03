@@ -25,12 +25,12 @@ static void* gpfs_init(struct fuse_conn_info *conn)
     gpfs->last_uid = 0ull;
     gpfs->nodes = NULL;
 
-    gpfs_create_dir(gpfs, "/");
-    gpfs_create_file(gpfs, "/test");
-    gpfs_create_file(gpfs, "/test2");
+    gpfs_create_dir(gpfs, "/", 0755);
+    gpfs_create_file(gpfs, "/test", 0755, 0);
+    gpfs_create_file(gpfs, "/test2", 0755, 0);
 
-    gpfs_create_dir(gpfs, "/x");
-    gpfs_create_file(gpfs, "/x/a");
+    gpfs_create_dir(gpfs, "/x", 0755);
+    gpfs_create_file(gpfs, "/x/a", 0755, 0);
   }
 
   return gpfs;
@@ -197,8 +197,7 @@ int gpfs_mkdir(const char *path, mode_t mode) {
 
   assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
 
-  // TODO(tache): add mode
-  gpfs_create_dir(gpfs, path);
+  gpfs_create_dir(gpfs, path, mode);
   return 0;
 }
 
@@ -214,8 +213,7 @@ int gpfs_mknod(const char * path, mode_t mode, dev_t type) {
 
   assert((gpfs = (struct gpfs_data*)fuse_get_context()->private_data));
 
-  // TODO(tache): use mode and type
-  gpfs_create_file(gpfs, path);
+  gpfs_create_file(gpfs, path, mode, type);
 
   return 0;
 }
